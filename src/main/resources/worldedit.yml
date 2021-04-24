@@ -1,0 +1,25 @@
+commands:
+  - '//set'
+  - '//undo'
+  - '/undo'
+
+forbidden:
+  - '32'
+  - 'fire'
+
+selection:
+  max:
+    default: 10 #10x10x10
+    vip: 15
+    svip: 20
+
+# Czas (w minutach), który gracz musi odczekać po dołączeniu
+# na serwer, by móc używać WE.
+start: 60 # minuty
+
+# Cooldown (w sekundach), który gracz musi odczekać po użyciu
+# komendy WE.
+cooldown:
+  default: 60 # sekundy
+  vip: 30
+  svip: 10

@@ -1,0 +1,24 @@
+name: Creative
+version: 1.0.0-SNAPSHOT
+main: pl.trollcraft.crv.CreativePlugin
+
+api-version: 1.16
+
+author: 'Jakub Zelmanowicz'
+
+load: POSTWORLD
+
+depend: [PlaceholderAPI, Multiverse-Core]
+
+commands:
+  prefix:
+    description: Opens a prefixes MENU.
+  prefixadmin:
+    description: Prefixes admin management command.
+
+  games:
+    aliases: [gra, gry, game]
+    description: Games command.
+  parkour:
+    aliases: [par]
+    description: Parkour editing command.
