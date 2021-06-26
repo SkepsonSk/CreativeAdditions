@@ -26,6 +26,9 @@ import pl.trollcraft.crv.prefix.controller.PrefixesController;
 import pl.trollcraft.crv.prefix.listener.PrefixUserListener;
 import pl.trollcraft.crv.prefix.service.PrefixPlaceholderService;
 import pl.trollcraft.crv.prefix.service.PrefixesService;
+import pl.trollcraft.crv.vehicles.command.RemoveVehiclesCommand;
+import pl.trollcraft.crv.vehicles.listener.VehiclesListener;
+import pl.trollcraft.crv.vehicles.service.VehiclesService;
 import pl.trollcraft.crv.we.config.WorldEditConfig;
 import pl.trollcraft.crv.we.controller.WorldEditUsersController;
 import pl.trollcraft.crv.we.listener.WorldEditUseListener;
@@ -43,6 +46,9 @@ public class CreativePlugin extends JavaPlugin {
 
     private ParkourService parkourService;
     private PlayableController playableController;
+
+    private ConfigProvider vehiclesProvider;
+    private VehiclesService vehiclesService;
 
     @Override
     public void onLoad() {
@@ -98,6 +104,14 @@ public class CreativePlugin extends JavaPlugin {
 
         EditorsController editorsController = new EditorsController();
 
+        // ---- Vehicles ----
+
+        vehiclesProvider = new ConfigProvider(this, "vehicles.yml");
+        vehiclesService = new VehiclesService(vehiclesProvider);
+        getServer().getPluginManager().registerEvents(new VehiclesListener(vehiclesService), this);
+
+        // ----
+
         getServer().getPluginManager().registerEvents(new GUIListener(guiController), this);
 
         getCommand("prefix").setExecutor(new PrefixesCommand(prefixesService));
@@ -105,6 +119,8 @@ public class CreativePlugin extends JavaPlugin {
 
         getCommand("parkour").setExecutor(new ParkourCommand(playableController, editorsController, parkourService));
         getCommand("games").setExecutor(new GamesCommand(playableController, gameGUIService));
+
+        getCommand("creative-vehicles-remove").setExecutor(new RemoveVehiclesCommand(vehiclesService));
 
         getServer().getPluginManager().registerEvents(new PrefixUserListener(prefixUsersController, prefixUsersDataSource), this);
 
@@ -121,6 +137,8 @@ public class CreativePlugin extends JavaPlugin {
     public void onDisable() {
         prefixUsersDataSource.updateAll(prefixUsersController.getUsers());
         parkourService.saveAll(playableController.findByType(Parkour.class));
+
+        vehiclesService.save();
     }
 
 }

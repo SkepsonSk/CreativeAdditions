@@ -90,6 +90,43 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Dependencies from /lib directory -->
+
+        <!-- Vehicles Plugin -->
+        <dependency>
+            <groupId>es.pollitoyeye</groupId>
+            <artifactId>vehicles</artifactId>
+            <version>11.7</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/Vehicles(11.7).jar</systemPath>
+        </dependency>
+
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.2</version>
+                <configuration>
+                    <artifactSet>
+                        <includes>
+                            <include>com.zaxxer</include>
+                        </includes>
+                    </artifactSet>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 
 </project>

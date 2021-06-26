@@ -5,8 +5,13 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
+import pl.trollcraft.crv.vehicles.model.AbstractVehicle;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 public class Help {
@@ -45,6 +50,22 @@ public class Help {
     public static void send(CommandSender player, String message) {
         player.sendMessage(ChatColor.translateAlternateColorCodes('&',
                 message));
+    }
+
+    public static List<String> toStringList(AbstractVehicle vehicle) {
+        List<String> parts = new ArrayList<>();
+
+        Location loc;
+        String r;
+        for (ArmorStand a : vehicle.getParts()) {
+            loc = a.getLocation();
+
+            r = loc.getWorld().getName() + ";" + loc.getX() + ";" + loc.getY()
+                    + ";" + loc.getZ() + ";" + loc.getYaw() + ";" + loc.getPitch();
+            parts.add(r);
+        }
+
+        return parts;
     }
 
 }

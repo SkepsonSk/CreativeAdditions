@@ -8,7 +8,7 @@ author: 'Jakub Zelmanowicz'
 
 load: POSTWORLD
 
-depend: [PlaceholderAPI, Multiverse-Core]
+depend: [PlaceholderAPI, Multiverse-Core, Vault]
 
 commands:
   prefix:
@@ -22,3 +22,7 @@ commands:
   parkour:
     aliases: [par]
     description: Parkour editing command.
+
+  creative-vehicles-remove:
+    aliases: [cvr, cvrem]
+    description: Removes all vehicles or vehicles which belong to a certain payer.
