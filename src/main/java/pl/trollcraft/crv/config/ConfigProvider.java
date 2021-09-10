@@ -13,8 +13,8 @@ public class ConfigProvider {
     private static final Logger LOG =
             Logger.getLogger(ConfigProvider.class.getTypeName());
 
-    private YamlConfiguration conf;
-    private File file;
+    private final YamlConfiguration conf;
+    private final File file;
 
     public ConfigProvider(Plugin plugin, String fileName) {
 

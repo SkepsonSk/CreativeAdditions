@@ -26,3 +26,15 @@ commands:
   creative-vehicles-remove:
     aliases: [cvr, cvrem]
     description: Removes all vehicles or vehicles which belong to a certain payer.
+
+  vehicles:
+    aliases: [pojazdy, poj]
+    description: Opens Vehicles Shop.
+
+  locateVehicle:
+    aliases: [gdziePojazd, gdpoj]
+    description: Locates vehicles for specific player.
+
+  clear:
+    aliases: [clr]
+    description: Removes specific items from inventory.

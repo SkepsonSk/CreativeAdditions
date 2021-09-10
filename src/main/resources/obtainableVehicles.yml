@@ -1,0 +1,13 @@
+categories:
+  cars:
+    display: 'Samochody'
+    slot: 0
+
+vehicles:
+  car:
+    category: 'cars'
+    display: '&eTrollcraft to guwno'
+    type: CAR
+    subType: BLACK
+    price: 300
+    slot: 0

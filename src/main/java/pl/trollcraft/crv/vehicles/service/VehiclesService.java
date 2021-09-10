@@ -2,27 +2,140 @@ package pl.trollcraft.crv.vehicles.service;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Vehicle;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import pl.trollcraft.crv.config.ConfigProvider;
+import pl.trollcraft.crv.controller.GUIController;
 import pl.trollcraft.crv.help.Help;
+import pl.trollcraft.crv.model.GUI;
+import pl.trollcraft.crv.vehicles.controller.VehiclesController;
 import pl.trollcraft.crv.vehicles.model.AbstractVehicle;
+import pl.trollcraft.crv.vehicles.model.ObtainableVehicle;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class VehiclesService {
 
     private final List<AbstractVehicle> vehicles;
     private final Multimap<OfflinePlayer, AbstractVehicle> playerSpawnedVehicles;
     private final ConfigProvider vehiclesProvider;
+    private final Economy economy;
+    private final VehiclesController vehiclesController;
+    private final GUIController guiController;
 
-    public VehiclesService(ConfigProvider vehiclesProvider) {
+    public VehiclesService(ConfigProvider vehiclesProvider,
+                           Economy economy,
+                           VehiclesController vehiclesController,
+                           GUIController guiController) {
+
         vehicles = new LinkedList<>();
         playerSpawnedVehicles = ArrayListMultimap.create();
         this.vehiclesProvider = vehiclesProvider;
+        this.economy = economy;
+        this.vehiclesController = vehiclesController;
+        this.guiController = guiController;
+    }
+
+    public void sell(Player player, ObtainableVehicle vehicle) {
+
+        if (economy.has(player, vehicle.getPrice())) {
+            economy.withdrawPlayer(player, vehicle.getPrice());
+            vehicle.give(player);
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                    "&aZakupiono pojazd."));
+        }
+        else {
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                    "&cBrak srodkow na zakup pojazdu."));
+        }
+
+    }
+
+    public Collection<AbstractVehicle> findVehiclesForPlayer(OfflinePlayer player) {
+        return this.playerSpawnedVehicles.get(player);
+    }
+
+    public Optional<AbstractVehicle> findVehicleForPlayer(OfflinePlayer player, Entity entity) {
+        if (entity instanceof ArmorStand) {
+            return playerSpawnedVehicles.get(player).stream()
+                    .filter(abstractVehicle -> abstractVehicle.getParts().contains(entity))
+                    .findFirst();
+        }
+        return Optional.empty();
+    }
+
+    public void openShop(Player player) {
+        guiController.unregister(player);
+        GUI gui = new GUI("&eSklep z pojazdami", 54, true);
+
+        vehiclesController.getVehicleCategories().forEach( vehicleCategory -> {
+
+            ItemStack itemStack = new ItemStack(Material.CHEST);
+            ItemMeta meta = itemStack.getItemMeta();
+            meta.setDisplayName(vehicleCategory.getDisplay());
+            itemStack.setItemMeta(meta);
+
+            gui.add(itemStack, vehicleCategory.getSlot(), e -> {
+                e.setCancelled(true);
+                openShopFor(player, vehicleCategory.getId());
+            });
+
+        } );
+
+        guiController.register(gui);
+        gui.open(player);
+    }
+
+    public void openShopFor(Player player, String vehicleCategory) {
+        guiController.unregister(player);
+
+        GUI gui = new GUI(vehicleCategory, 54, true);
+
+        for (int i = 45 ; i < 54 ; i++) {
+
+            ItemStack itemStack;
+            if (i == 49) {
+                itemStack = new ItemStack(Material.RED_STAINED_GLASS_PANE);
+                ItemMeta meta = itemStack.getItemMeta();
+                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&',
+                        "&cWroc do KATEGORII"));
+                itemStack.setItemMeta(meta);
+                gui.add(itemStack, i, e -> openShop(player));
+            }
+            else {
+                itemStack = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+                gui.add(itemStack, i, e -> e.setCancelled(true));
+            }
+
+        }
+
+        vehiclesController.findByCategory(vehicleCategory).forEach(vehicle -> {
+
+            ItemStack itemStack = new ItemStack(Material.CHEST);
+            ItemMeta meta = itemStack.getItemMeta();
+            meta.setDisplayName(vehicle.getDisplay());
+            List<String> lore = new ArrayList<>();
+            lore.add("");
+            lore.add(ChatColor.translateAlternateColorCodes('&',
+                    "&aCena: &e" + vehicle.getPrice() + "TC"));
+            meta.setLore(lore);
+            itemStack.setItemMeta(meta);
+
+            gui.add(itemStack, vehicle.getSlot(), e -> {
+                e.setCancelled(true);
+                sell(player, vehicle);
+            });
+        });
+
+        guiController.register(gui);
+        gui.open(player);
     }
 
     public void register(AbstractVehicle vehicle) {
@@ -37,7 +150,7 @@ public class VehiclesService {
         playerSpawnedVehicles.put(player, vehicle);
     }
 
-    public void unTrack(Player player, Vehicle vehicle) {
+    public void unTrack(Player player, AbstractVehicle vehicle) {
         playerSpawnedVehicles.remove(player, vehicle);
     }
 

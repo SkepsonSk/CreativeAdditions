@@ -1,6 +1,7 @@
 package pl.trollcraft.crv.model;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -21,7 +22,8 @@ public class GUI {
     private boolean transition; // Informs if gui is currently transiting to other.
 
     public GUI(String title, int slots, boolean cancelOnDefault) {
-        inventory = Bukkit.createInventory(null, slots, title);
+        inventory = Bukkit.createInventory(null, slots,
+                ChatColor.translateAlternateColorCodes('&', title));
         slotsMap = new HashMap<>();
         this.cancelOnDefault = cancelOnDefault;
         transition = false;

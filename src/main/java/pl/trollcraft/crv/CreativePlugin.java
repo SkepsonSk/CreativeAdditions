@@ -4,6 +4,7 @@ import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.java.JavaPlugin;
 import pl.trollcraft.crv.config.ConfigProvider;
 import pl.trollcraft.crv.config.config.DataSourceConfig;
+import pl.trollcraft.crv.config.config.VehiclesConfig;
 import pl.trollcraft.crv.controller.CredentialsController;
 import pl.trollcraft.crv.controller.GUIController;
 import pl.trollcraft.crv.datasource.DatabaseProvider;
@@ -16,6 +17,8 @@ import pl.trollcraft.crv.games.model.parkour.Parkour;
 import pl.trollcraft.crv.games.service.GameGUIService;
 import pl.trollcraft.crv.games.service.ParkourService;
 import pl.trollcraft.crv.help.blocksdetector.BlockDetector;
+import pl.trollcraft.crv.inventoryClear.ClearCommand;
+import pl.trollcraft.crv.inventoryClear.clearRules.VehicleClearRule;
 import pl.trollcraft.crv.prefix.controller.PrefixUsersController;
 import pl.trollcraft.crv.prefix.datasource.PrefixUsersDataSource;
 import pl.trollcraft.crv.prefix.datasource.PrefixesDataSource;
@@ -26,7 +29,10 @@ import pl.trollcraft.crv.prefix.controller.PrefixesController;
 import pl.trollcraft.crv.prefix.listener.PrefixUserListener;
 import pl.trollcraft.crv.prefix.service.PrefixPlaceholderService;
 import pl.trollcraft.crv.prefix.service.PrefixesService;
+import pl.trollcraft.crv.vehicles.command.LocateVehiclesCommand;
 import pl.trollcraft.crv.vehicles.command.RemoveVehiclesCommand;
+import pl.trollcraft.crv.vehicles.command.VehiclesShopCommand;
+import pl.trollcraft.crv.vehicles.controller.VehiclesController;
 import pl.trollcraft.crv.vehicles.listener.VehiclesListener;
 import pl.trollcraft.crv.vehicles.service.VehiclesService;
 import pl.trollcraft.crv.we.config.WorldEditConfig;
@@ -106,8 +112,12 @@ public class CreativePlugin extends JavaPlugin {
 
         // ---- Vehicles ----
 
+        ConfigProvider obtainableVehiclesProvider = new ConfigProvider(this, "obtainableVehicles.yml");
+        VehiclesController vehiclesController = new VehiclesController();
+        new VehiclesConfig(vehiclesController).configure(obtainableVehiclesProvider);
+
         vehiclesProvider = new ConfigProvider(this, "vehicles.yml");
-        vehiclesService = new VehiclesService(vehiclesProvider);
+        vehiclesService = new VehiclesService(vehiclesProvider, economy, vehiclesController, guiController);
         getServer().getPluginManager().registerEvents(new VehiclesListener(vehiclesService), this);
 
         // ----
@@ -121,11 +131,20 @@ public class CreativePlugin extends JavaPlugin {
         getCommand("games").setExecutor(new GamesCommand(playableController, gameGUIService));
 
         getCommand("creative-vehicles-remove").setExecutor(new RemoveVehiclesCommand(vehiclesService));
+        getCommand("vehicles").setExecutor(new VehiclesShopCommand(vehiclesService));
 
-        getServer().getPluginManager().registerEvents(new PrefixUserListener(prefixUsersController, prefixUsersDataSource), this);
+        getCommand("locateVehicle").setExecutor(new LocateVehiclesCommand(vehiclesService));
+
+        ClearCommand clearCommand = new ClearCommand();
+        clearCommand.registerRule(new VehicleClearRule());
+        getCommand("clear").setExecutor(clearCommand);
+
+        getServer().getPluginManager().registerEvents(new PrefixUserListener(prefixUsersController, prefixUsersDataSource),
+                this);
 
         getServer().getPluginManager().registerEvents(new WorldEditUserListener(worldEditUsersController), this);
-        getServer().getPluginManager().registerEvents(new WorldEditUseListener(worldEditRestriction, worldEditUsersController), this);
+        getServer().getPluginManager().registerEvents(new WorldEditUseListener(worldEditRestriction, worldEditUsersController),
+                this);
 
         getServer().getPluginManager().registerEvents(new CommandsListener(playableController), this);
 
