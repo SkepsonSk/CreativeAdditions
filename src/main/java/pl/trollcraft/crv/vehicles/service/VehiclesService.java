@@ -20,6 +20,8 @@ import pl.trollcraft.crv.vehicles.model.AbstractVehicle;
 import pl.trollcraft.crv.vehicles.model.ObtainableVehicle;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class VehiclesService {
 
@@ -62,13 +64,14 @@ public class VehiclesService {
         return this.playerSpawnedVehicles.get(player);
     }
 
-    public Optional<AbstractVehicle> findVehicleForPlayer(OfflinePlayer player, Entity entity) {
-        if (entity instanceof ArmorStand) {
-            return playerSpawnedVehicles.get(player).stream()
-                    .filter(abstractVehicle -> abstractVehicle.getParts().contains(entity))
-                    .findFirst();
-        }
-        return Optional.empty();
+    public int getVehiclesAmountForPlayer(OfflinePlayer player) {
+        return this.playerSpawnedVehicles.get(player).size();
+    }
+
+    public Optional<AbstractVehicle> findVehicleForPlayer(UUID vehicleUUID) {
+        return this.vehicles.stream()
+                .filter( vehicle -> vehicle.getVehicleUUID().equals(vehicleUUID) )
+                .findFirst();
     }
 
     public void openShop(Player player) {
@@ -150,8 +153,20 @@ public class VehiclesService {
         playerSpawnedVehicles.put(player, vehicle);
     }
 
+    public void track(Player player) {
+        List<AbstractVehicle> vehicles = this.vehicles.stream()
+                .filter(abstractVehicle -> abstractVehicle.getPlayerName().equals(player.getName()))
+                .collect(Collectors.toList());
+
+        this.playerSpawnedVehicles.putAll(player, vehicles);
+    }
+
     public void unTrack(Player player, AbstractVehicle vehicle) {
         playerSpawnedVehicles.remove(player, vehicle);
+    }
+
+    public void unTrack(Player player) {
+        playerSpawnedVehicles.removeAll(player);
     }
 
     public void remove(OfflinePlayer player) {
@@ -172,15 +187,16 @@ public class VehiclesService {
     }
 
     public void save() {
-        for (OfflinePlayer player : playerSpawnedVehicles.keys()) {
-            int ind = 0;
+        vehiclesProvider.write("vehicles", null);
 
-            String name = player.getName();
-            for (AbstractVehicle vehicle : playerSpawnedVehicles.get(player)) {
-                vehiclesProvider.write(String.format("vehicles.%s.%d", name, ind), Help.toStringList(vehicle));
-                ind++;
-            }
-        }
+        this.vehicles.forEach( abstractVehicle -> {
+
+            String playerName = abstractVehicle.getPlayerName();
+            vehiclesProvider.write(String.format("vehicles.%s.%s", playerName,
+                            abstractVehicle.getVehicleUUID().toString()),
+                    Help.toStringList(abstractVehicle));
+        } );
+
         vehiclesProvider.save();
     }
 

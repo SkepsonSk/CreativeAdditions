@@ -1,4 +1,4 @@
-package pl.trollcraft.crv;
+package pl.trollcraft.crv.utils;
 
 import org.bukkit.Location;
 import org.bukkit.Material;

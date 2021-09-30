@@ -31,10 +31,14 @@ commands:
     aliases: [pojazdy, poj]
     description: Opens Vehicles Shop.
 
-  locateVehicle:
-    aliases: [gdziePojazd, gdpoj]
+  gdziePojazd:
+    aliases: [locateVehicle, gdpoj]
     description: Locates vehicles for specific player.
 
   clear:
     aliases: [clr]
     description: Removes specific items from inventory.
+
+  clearEntities:
+    aliases: [clre]
+    description: Clears entities on the specified worlds.

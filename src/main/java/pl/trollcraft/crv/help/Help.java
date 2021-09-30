@@ -16,6 +16,11 @@ import java.util.Objects;
 
 public class Help {
 
+    public static class ArmorStandLocation {
+        public Location location;
+        public String name;
+    }
+
     public static String locationToString(Location loc) {
 
         String world = Objects.requireNonNull(loc.getWorld()).getName();
@@ -47,6 +52,24 @@ public class Help {
 
     }
 
+    public static ArmorStandLocation armorStandLocationFromString(String s) {
+        String[] sA = s.split(":");
+
+        World world = Bukkit.getWorld(sA[0]);
+        double x = Double.parseDouble(sA[1]);
+        double y = Double.parseDouble(sA[2]);
+        double z = Double.parseDouble(sA[3]);
+        float yaw = Float.parseFloat(sA[4]);
+        float pitch = Float.parseFloat(sA[5]);
+
+        String name = sA[6];
+        ArmorStandLocation armorStandLocation = new ArmorStandLocation();
+        armorStandLocation.location = new Location(world, x, y, z, yaw, pitch);
+        armorStandLocation.name = name;
+
+        return armorStandLocation;
+    }
+
     public static void send(CommandSender player, String message) {
         player.sendMessage(ChatColor.translateAlternateColorCodes('&',
                 message));
@@ -60,8 +83,9 @@ public class Help {
         for (ArmorStand a : vehicle.getParts()) {
             loc = a.getLocation();
 
-            r = loc.getWorld().getName() + ";" + loc.getX() + ";" + loc.getY()
-                    + ";" + loc.getZ() + ";" + loc.getYaw() + ";" + loc.getPitch();
+            r = loc.getWorld().getName() + ":" + loc.getX() + ":" + loc.getY()
+                    + ":" + loc.getZ() + ":" + loc.getYaw() + ":" + loc.getPitch()
+                    + ":" + a.getName();
             parts.add(r);
         }
 

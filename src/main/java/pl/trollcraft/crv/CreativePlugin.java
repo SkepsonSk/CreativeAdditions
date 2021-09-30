@@ -3,11 +3,14 @@ package pl.trollcraft.crv;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.java.JavaPlugin;
 import pl.trollcraft.crv.config.ConfigProvider;
-import pl.trollcraft.crv.config.config.DataSourceConfig;
-import pl.trollcraft.crv.config.config.VehiclesConfig;
+import pl.trollcraft.crv.config.config.*;
 import pl.trollcraft.crv.controller.CredentialsController;
+import pl.trollcraft.crv.controller.DefaultConfigController;
 import pl.trollcraft.crv.controller.GUIController;
 import pl.trollcraft.crv.datasource.DatabaseProvider;
+import pl.trollcraft.crv.entityClear.EntityClearCommand;
+import pl.trollcraft.crv.entityClear.EntityClearController;
+import pl.trollcraft.crv.entityClear.EntityClearService;
 import pl.trollcraft.crv.games.command.GamesCommand;
 import pl.trollcraft.crv.games.command.ParkourCommand;
 import pl.trollcraft.crv.games.controller.EditorsController;
@@ -35,6 +38,8 @@ import pl.trollcraft.crv.vehicles.command.VehiclesShopCommand;
 import pl.trollcraft.crv.vehicles.controller.VehiclesController;
 import pl.trollcraft.crv.vehicles.listener.VehiclesListener;
 import pl.trollcraft.crv.vehicles.service.VehiclesService;
+import pl.trollcraft.crv.vehicles.service.restriction.AmountVehicleRestriction;
+import pl.trollcraft.crv.vehicles.service.restriction.VehiclesRestrictionService;
 import pl.trollcraft.crv.we.config.WorldEditConfig;
 import pl.trollcraft.crv.we.controller.WorldEditUsersController;
 import pl.trollcraft.crv.we.listener.WorldEditUseListener;
@@ -68,6 +73,10 @@ public class CreativePlugin extends JavaPlugin {
                 .getServicesManager()
                 .getRegistration(Economy.class))
                 .getProvider();
+
+        ConfigProvider defaultConfigProvider = new ConfigProvider(this, "config.yml");
+        DefaultConfigController defaultConfigController = new DefaultConfigController();
+        new DefaultConfig(defaultConfigController).configure(defaultConfigProvider);
 
         CredentialsController credentialsController = new CredentialsController();
         new DataSourceConfig(credentialsController).configure(dataSourceProvider);
@@ -114,11 +123,25 @@ public class CreativePlugin extends JavaPlugin {
 
         ConfigProvider obtainableVehiclesProvider = new ConfigProvider(this, "obtainableVehicles.yml");
         VehiclesController vehiclesController = new VehiclesController();
-        new VehiclesConfig(vehiclesController).configure(obtainableVehiclesProvider);
+        new ObtainableVehiclesConfig(vehiclesController).configure(obtainableVehiclesProvider);
+
+        VehiclesRestrictionService vehiclesRestrictionService = new VehiclesRestrictionService();
 
         vehiclesProvider = new ConfigProvider(this, "vehicles.yml");
         vehiclesService = new VehiclesService(vehiclesProvider, economy, vehiclesController, guiController);
-        getServer().getPluginManager().registerEvents(new VehiclesListener(vehiclesService), this);
+        new VehiclesConfig(vehiclesService).configure(vehiclesProvider);
+
+        getServer().getPluginManager()
+                .registerEvents(new VehiclesListener(vehiclesRestrictionService, vehiclesService), this);
+
+        vehiclesRestrictionService.register(new AmountVehicleRestriction(defaultConfigController, vehiclesService));
+
+        // ---- Entities Clearing ----
+
+        EntityClearController entityClearController = new EntityClearController();
+        ConfigProvider entityClearConfigProvider = new ConfigProvider(this, "entityClearing.yml");
+        new EntityClearConfig(entityClearController).configure(entityClearConfigProvider);
+        EntityClearService entityClearService = new EntityClearService(this, entityClearController);
 
         // ----
 
@@ -133,7 +156,9 @@ public class CreativePlugin extends JavaPlugin {
         getCommand("creative-vehicles-remove").setExecutor(new RemoveVehiclesCommand(vehiclesService));
         getCommand("vehicles").setExecutor(new VehiclesShopCommand(vehiclesService));
 
-        getCommand("locateVehicle").setExecutor(new LocateVehiclesCommand(vehiclesService));
+        getCommand("gdziePojazd").setExecutor(new LocateVehiclesCommand(defaultConfigController, vehiclesService));
+
+        getCommand("clearEntities").setExecutor(new EntityClearCommand(entityClearService));
 
         ClearCommand clearCommand = new ClearCommand();
         clearCommand.registerRule(new VehicleClearRule());
@@ -156,7 +181,6 @@ public class CreativePlugin extends JavaPlugin {
     public void onDisable() {
         prefixUsersDataSource.updateAll(prefixUsersController.getUsers());
         parkourService.saveAll(playableController.findByType(Parkour.class));
-
         vehiclesService.save();
     }
 

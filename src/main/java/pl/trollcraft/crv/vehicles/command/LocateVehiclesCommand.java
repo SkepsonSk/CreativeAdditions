@@ -7,6 +7,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import pl.trollcraft.crv.controller.DefaultConfigController;
 import pl.trollcraft.crv.vehicles.model.AbstractVehicle;
 import pl.trollcraft.crv.vehicles.service.VehiclesService;
 
@@ -14,9 +15,13 @@ import java.util.Collection;
 
 public class LocateVehiclesCommand implements CommandExecutor {
 
+    private final DefaultConfigController defaultConfigController;
     private final VehiclesService vehiclesService;
 
-    public LocateVehiclesCommand(VehiclesService vehiclesService) {
+    public LocateVehiclesCommand(DefaultConfigController defaultConfigController,
+                                 VehiclesService vehiclesService) {
+
+        this.defaultConfigController = defaultConfigController;
         this.vehiclesService = vehiclesService;
     }
 
@@ -58,8 +63,16 @@ public class LocateVehiclesCommand implements CommandExecutor {
         }
         else {
 
-            calling.sendMessage(ChatColor.translateAlternateColorCodes('&',
-                    "&7Pojazdy (" + vehicles.size()  + "):"));
+            if (player instanceof Player) {
+                int maximumVehicles = defaultConfigController.getMaximumVehicles().get( (Player) player);
+                calling.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                        "&7Pojazdy (" + vehicles.size()  + " / " + maximumVehicles + "):"));
+            }
+            else {
+                calling.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                        "&7Pojazdy (" + vehicles.size()  + "):"));
+            }
+
             for (AbstractVehicle vehicle : vehicles) {
                 calling.sendMessage(ChatColor.translateAlternateColorCodes('&',
                         "&e - " + vehicle.toString()));

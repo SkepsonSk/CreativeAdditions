@@ -1,0 +1,5 @@
+worlds:
+  - 'world'
+entity-types:
+  - 'ARMOR_STAND'
+clearing-interval: 300

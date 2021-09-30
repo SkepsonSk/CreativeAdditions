@@ -1,0 +1,5 @@
+vehicles:
+  maximum-vehicles-spawned:
+    svip: 9
+    vip: 7
+    default: 5
